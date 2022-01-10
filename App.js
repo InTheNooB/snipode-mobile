@@ -1,11 +1,16 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import CodeSnippetContainer from './components/CodeSnippetContainer';
+
+const SERVER = {
+  IP: "10.7.26.193",
+  PORT: "3001"
+}
 
 export default function App() {
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <CodeSnippetContainer serverIP={SERVER.IP} port={SERVER.PORT} />
     </View>
   );
 }
@@ -13,8 +18,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#111111',
     alignItems: 'center',
     justifyContent: 'center',
-  },
+  }
 });
