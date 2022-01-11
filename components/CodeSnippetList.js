@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { ScrollView, RefreshControl } from 'react-native';
 import CodeSnippet from './CodeSnippet';
 import CodeSnippetLoading from './CodeSnippetLoading';
 
@@ -11,6 +11,7 @@ const CodeSnippetList = ({ codeSnippets, reloadCodeSnippets, refreshing }) => {
 
     return (
         <ScrollView
+            style={{ width: '100%' }}
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
@@ -19,13 +20,15 @@ const CodeSnippetList = ({ codeSnippets, reloadCodeSnippets, refreshing }) => {
                     onRefresh={onRefresh}
                 />
             }>
-            {codeSnippets.length != 0
-                ? codeSnippets.map(codeSnippet =>
-                    !codeSnippet.hidden && <CodeSnippet key={codeSnippet.id} codeSnippet={codeSnippet} />
-                )
-                : <>
-                    <CodeSnippetLoading />
-                </>
+            {
+                codeSnippets && codeSnippets.length != 0
+                    ? codeSnippets.map(codeSnippet =>
+                        !codeSnippet.hidden && <CodeSnippet key={codeSnippet.id} codeSnippet={codeSnippet} />
+                    )
+                    : <>
+                        <CodeSnippetLoading />
+                        <CodeSnippetLoading />
+                    </>
             }
         </ScrollView>
     )

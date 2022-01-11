@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         flexDirection: "row",
         width: "90%",
-        marginTop: 75
     },
     input: {
         fontSize: 20,

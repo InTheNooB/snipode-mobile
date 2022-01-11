@@ -1,7 +1,6 @@
 import React from 'react'
 import { View, StyleSheet } from "react-native";
 import { FadeLoading } from 'react-native-fade-loading';
-import { backgroundColor } from 'react-native/Libraries/Components/View/ReactNativeStyleAttributes';
 
 const CodeSnippetLoading = () => {
     return (
@@ -28,7 +27,6 @@ const CodeSnippetLoading = () => {
                 <FadeLoading style={styles.code} primaryColor="gray" secondaryColor="lightgray" duration={2000} />
                 <FadeLoading style={styles.code} primaryColor="gray" secondaryColor="lightgray" duration={2000} />
                 <FadeLoading style={styles.code} primaryColor="gray" secondaryColor="lightgray" duration={2000} />
-
             </View>
         </View >
     )

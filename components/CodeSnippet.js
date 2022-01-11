@@ -1,29 +1,62 @@
-import React from 'react'
-import { View, Text, Image, StyleSheet, ActivityIndicator } from "react-native";
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useFonts } from 'expo-font';
 import AppLoading from 'expo-app-loading';
 import SyntaxHighlighter from 'react-native-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { SvgUri } from 'react-native-svg';
+import { SvgUri, SvgXml } from 'react-native-svg';
+import Storage from '../api/StorageAPI';
 
 const CodeSnippet = ({ codeSnippet }) => {
 
+    async function fetchText(uri) {
+        try {
+            const response = await fetch(uri);
+            return response.headers.get("Content-Type") === 'image/svg+xml' ? await response.text() : null;
+        } catch (err) {
+            console.warn(err);
+        }
+    }
+
+    // Loads fonts
     let [fontsLoaded] = useFonts({
         'BeVietnamProBold': require('../assets/fonts/BeVietnamPro-Bold.ttf'),
         'BeVietnamProLight': require('../assets/fonts/BeVietnamPro-Light.ttf'),
         'Courrier': require('../assets/fonts/Courrier.ttf'),
     });
 
+    // Define variables
+    const [deviconSvgXML, setDeviconSvgXML] = useState(null);
     const [deviconSvgUrl, setDeviconSvgUrl] = useState(null);
 
+
     // Check if the image exists before calling the react-native-svg SvgUri component
-    fetch(`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${codeSnippet.language}/${codeSnippet.language}-plain.svg`)
-        .then((response => {
-            if (response.headers.get("Content-Type") === 'image/svg+xml') {
-                setDeviconSvgUrl(`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${codeSnippet.language}/${codeSnippet.language}-plain.svg`);
-            }
-        }));
+    // isMounted prevents from calling useState hook on an unmounted component
+    useEffect(() => {
+        let isMounted = true;
+        new Promise((resolve, reject) => {
+            // First check if the svg is in the local storage
+            Storage.getSvgXML(codeSnippet.language).then((storageSvg) => {
+                if (storageSvg && storageSvg !== '') {
+                    resolve(storageSvg);
+                } else {
+                    // If it wasn't found in the local storage, search online
+                    fetchText(`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${codeSnippet.language}/${codeSnippet.language}-plain.svg`)
+                        .then((webSvg) => {
+                            if (isMounted && webSvg) {
+                                Storage.storeSvgXML(codeSnippet.language, webSvg);
+                                resolve(webSvg);
+                            }
+                        }).catch(err => console.warn(err))
+                }
+            });
+        }).then(svg => {
+            if (isMounted) setDeviconSvgXML(svg);
+        })
+        return () => {
+            isMounted = false;
+        }
+    }, []);
 
     if (!fontsLoaded) {
         return <AppLoading />;
@@ -34,14 +67,16 @@ const CodeSnippet = ({ codeSnippet }) => {
                     <Text style={styles.titleId}>{`#${codeSnippet.id}`}</Text>
                     <Text style={{ ...styles.title, color: codeSnippet.color }}>{codeSnippet.title}</Text>
                     {deviconSvgUrl != null
-                        ? <SvgUri
+                        ?
+                        <SvgUri
                             style={styles.titleImage}
                             width="32"
                             height="32"
                             uri={deviconSvgUrl}
                         />
-                        :
-                        <ActivityIndicator size="small" color="#fff" />}
+                        : deviconSvgXML != null
+                            ? <SvgXml xml={deviconSvgXML} width="32" height="32" />
+                            : <ActivityIndicator size="small" color="#fff" />}
                 </View>
                 <View style={styles.descriptionContainer}>
                     <Text style={styles.description}>{codeSnippet.description}</Text>
@@ -70,7 +105,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 3,
         backgroundColor: '#111111',
-        borderRadius: 20
+        borderRadius: 20,
+        fontFamily: 'Courrier'
     },
     titleContainer: {
         display: 'flex',
@@ -107,7 +143,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgb(47,47,47)',
         borderRadius: 10
     }
-
 });
 
 export default CodeSnippet
