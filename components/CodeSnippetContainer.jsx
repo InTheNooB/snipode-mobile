@@ -5,6 +5,8 @@ import ErrorsContext from '../utils/ErrorsContext';
 import Storage from '../api/StorageAPI';
 import io from 'socket.io-client';
 import * as Notifications from 'expo-notifications';
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-root-toast';
 
 
 const askNotificationPermissions = async () => {
@@ -14,11 +16,23 @@ const askNotificationPermissions = async () => {
         console.log('Notification permissions granted.');
 };
 
-const CodeSnippetContainer = ({ onDataIsLoaded, SERVER }) => {
+const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCodeSnippetToast }) => {
 
     // Define variables using hooks
     const [codeSnippets, setCodeSnippets] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Show toast
+    if (showAddedCodeSnippetToast) {
+        Toast.show('Code Snippet added to the list !', {
+            duration: Toast.durations.SHORT,
+            position: 75,
+            shadow: true,
+            animation: true,
+            hideOnPress: true,
+            delay: 0,
+        });
+    }
 
     // Notifications
     useEffect(() => {
@@ -148,10 +162,28 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER }) => {
         }));
     };
 
+    // Redirects user to the "Add Code Snippet" page
+    const addCodeSnippetCall = () => {
+        navigation.navigate('Add Code Snippet');
+    };
+
+    // Copies code to the clipboard
+    const copyToClipboard = (code) => {
+        Clipboard.setString(code);
+        Toast.show('Code copied to clipboard !', {
+            duration: Toast.durations.SHORT,
+            position: 75,
+            shadow: true,
+            animation: true,
+            hideOnPress: true,
+            delay: 0,
+        });
+    }
+
     return (
         <>
-            <SearchBar searchFilter={searchFilter} />
-            <CodeSnippetList codeSnippets={codeSnippets} reloadCodeSnippets={loadCodeSnippets} refreshing={refreshing} />
+            <SearchBar searchFilter={searchFilter} addCodeSnippetCall={addCodeSnippetCall} />
+            <CodeSnippetList codeSnippets={codeSnippets} reloadCodeSnippets={loadCodeSnippets} refreshing={refreshing} copyToClipboard={copyToClipboard} />
         </>
     )
 }

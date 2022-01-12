@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { useFonts } from 'expo-font';
-import AppLoading from 'expo-app-loading';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 import SyntaxHighlighter from 'react-native-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { SvgUri, SvgXml } from 'react-native-svg';
 import Storage from '../api/StorageAPI';
+import { STYLE } from '../api/ConstantsAPI';
 
-const CodeSnippet = ({ codeSnippet }) => {
+const CodeSnippet = ({ codeSnippet, copyToClipboard }) => {
 
     async function fetchText(uri) {
         try {
@@ -17,13 +16,6 @@ const CodeSnippet = ({ codeSnippet }) => {
             console.warn(err);
         }
     }
-
-    // Loads fonts
-    let [fontsLoaded] = useFonts({
-        'BeVietnamProBold': require('../assets/fonts/BeVietnamPro-Bold.ttf'),
-        'BeVietnamProLight': require('../assets/fonts/BeVietnamPro-Light.ttf'),
-        'Courrier': require('../assets/fonts/Courrier.ttf'),
-    });
 
     // Define variables
     const [deviconSvgXML, setDeviconSvgXML] = useState(null);
@@ -58,42 +50,42 @@ const CodeSnippet = ({ codeSnippet }) => {
         }
     }, []);
 
-    if (!fontsLoaded) {
-        return <AppLoading />;
-    } else {
-        return (
-            <View style={styles.container}>
-                <View style={styles.titleContainer}>
-                    <Text style={styles.titleId}>{`#${codeSnippet.id}`}</Text>
-                    <Text style={{ ...styles.title, color: codeSnippet.color }}>{codeSnippet.title}</Text>
-                    {deviconSvgUrl != null
-                        ?
-                        <SvgUri
-                            style={styles.titleImage}
-                            width="32"
-                            height="32"
-                            uri={deviconSvgUrl}
-                        />
-                        : deviconSvgXML != null
-                            ? <SvgXml xml={deviconSvgXML} width="32" height="32" />
-                            : <ActivityIndicator size="small" color="#fff" />}
-                </View>
-                <View style={styles.descriptionContainer}>
-                    <Text style={styles.description}>{codeSnippet.description}</Text>
-                </View>
-                <View style={styles.codeContainer}>
-                    <SyntaxHighlighter
-                        language={codeSnippet.language}
-                        style={materialDark}
-                        highlighter={"prism" || "hljs"}
-                    >
-                        {codeSnippet.code}
-                    </SyntaxHighlighter>
-                </View>
-            </View >
-        )
-    }
+    return (
+        <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.titleContainer}
+                onPress={() => copyToClipboard(codeSnippet.code)}
+            >
+                <Text style={styles.titleId}>{`#${codeSnippet.id}`}</Text>
+                <Text style={{ ...styles.title, color: codeSnippet.color }}>{codeSnippet.title}</Text>
+                {deviconSvgUrl != null
+                    ?
+                    <SvgUri
+                        style={styles.titleImage}
+                        width="32"
+                        height="32"
+                        uri={deviconSvgUrl}
+                    />
+                    : deviconSvgXML != null
+                        ? <SvgXml xml={deviconSvgXML} width="32" height="32" />
+                        : <ActivityIndicator size="small" color="#fff" />}
+            </TouchableOpacity>
+            <View style={styles.descriptionContainer}>
+                <Text style={styles.description}>{codeSnippet.description}</Text>
+            </View>
+            <View style={styles.codeContainer}>
+                <SyntaxHighlighter
+                    language={codeSnippet.language}
+                    style={materialDark}
+                    highlighter={"prism" || "hljs"}
+                >
+                    {codeSnippet.code}
+                </SyntaxHighlighter>
+            </View>
+        </View >
+    )
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -104,7 +96,8 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.5,
         shadowRadius: 3,
-        backgroundColor: '#111111',
+        elevation: 7, // Android
+        backgroundColor: STYLE.backgroundColor,
         borderRadius: 20,
         fontFamily: 'Courrier'
     },

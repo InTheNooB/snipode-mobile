@@ -3,7 +3,7 @@ import { ScrollView, RefreshControl } from 'react-native';
 import CodeSnippet from './CodeSnippet';
 import CodeSnippetLoading from './CodeSnippetLoading';
 
-const CodeSnippetList = ({ codeSnippets, reloadCodeSnippets, refreshing }) => {
+const CodeSnippetList = ({ codeSnippets, reloadCodeSnippets, refreshing, copyToClipboard }) => {
 
     const onRefresh = React.useCallback(() => {
         reloadCodeSnippets();
@@ -23,7 +23,7 @@ const CodeSnippetList = ({ codeSnippets, reloadCodeSnippets, refreshing }) => {
             {
                 codeSnippets && codeSnippets.length != 0
                     ? codeSnippets.map(codeSnippet =>
-                        !codeSnippet.hidden && <CodeSnippet key={codeSnippet.id} codeSnippet={codeSnippet} />
+                        !codeSnippet.hidden && <CodeSnippet key={codeSnippet.id} codeSnippet={codeSnippet} copyToClipboard={copyToClipboard} />
                     )
                     : <>
                         <CodeSnippetLoading />
