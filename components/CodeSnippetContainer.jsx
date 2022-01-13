@@ -16,6 +16,14 @@ const askNotificationPermissions = async () => {
         console.log('Notification permissions granted.');
 };
 
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false
+    })
+});
+
 const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCodeSnippetToast }) => {
 
     // Define variables using hooks
@@ -39,11 +47,23 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCod
         // Ask for notifications permission
         askNotificationPermissions();
 
-        // Sets the notification listener
-        const listener = Notifications.addNotificationReceivedListener(null);
+        // This listener is fired whenever a notification is received while the app is foregrounded.
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+            console.log("Notification received !");
+        });
+
+        // This listener is fired whenever a user taps on or interacts with a notification (works when app is
+        // foregrounded, backgrounded, or killed). This listener is especially useful for routing users to a
+        // particular screen after they tap on a particular notification.
+        const interactWithNotificationListener = Notifications.addNotificationResponseReceivedListener(response => {
+            // User taps on the notification
+            if (response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+                navigation.navigate('Code Snippets');
+            }
+        });
 
         // Removes this listener on destruction
-        return () => listener.remove();
+        return () => { notificationListener.remove(), interactWithNotificationListener.remove() };
     }, [])
 
     // Socket.IO
