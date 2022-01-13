@@ -1,8 +1,9 @@
 #  Snipode Mobile
 
 Snipode Mobile  *`Snippet Code Mobile`* is the mobile equivalent of [Snippet Code](https://github.com/InTheNooB/snipode) 
-
+<p align="center">
 <img style="text-align:center; margin-right:auto; margin-left: auto" src="https://i.ibb.co/5RvnCxK/Capture-d-e-cran-2022-01-13-a-09-23-05.png" alt="Capture-d-e-cran-2022-01-13-a-09-23-05" border="0">
+</p>
 
 ## Installation
 Build the react project using the command  
