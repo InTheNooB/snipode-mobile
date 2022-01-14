@@ -4,9 +4,11 @@ import SearchBar from './SearchBar';
 import ErrorsContext from '../utils/ErrorsContext';
 import Storage from '../api/StorageAPI';
 import io from 'socket.io-client';
+import Toast from 'react-native-root-toast';
 import * as Notifications from 'expo-notifications';
 import * as Clipboard from 'expo-clipboard';
-import Toast from 'react-native-root-toast';
+import * as Progress from 'react-native-progress';
+
 
 
 const askNotificationPermissions = async () => {
@@ -29,6 +31,10 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCod
     // Define variables using hooks
     const [codeSnippets, setCodeSnippets] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
+    const [progessBarState, setProgessBarState] = useState(0);
+
+    // Retrieve context (containing a list of possible errors) using a hook
+    const errorsContext = useContext(ErrorsContext);
 
     // Show toast
     if (showAddedCodeSnippetToast) {
@@ -101,19 +107,26 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCod
         return () => socket.disconnect();
     }, [SERVER])
 
-    // Retrieve context (containing a list of possible errors) using a hook
-    const errorsContext = useContext(ErrorsContext);
+    const sleep = async (ms) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    }
 
     // Function that gets the list of code snippet by fetching data from the server
     // or grabbing data from the local storage
     const getCodeSnippets = () => {
-        return new Promise((resolveMain, rejectMain) => {
+        return new Promise((resolveMain) => {
+            let result = null;
+            setProgessBarState(0.1);
             setRefreshing(true);
-            new Promise((resolveSub, rejectSub) => {
+            new Promise(async (resolveSub, rejectSub) => {
                 if (SERVER) {
-                    fetch(`http://${SERVER.IP}:${SERVER.PORT}/api/getCodeSnippets`)
+                    fetch(`http://${SERVER.IP}:${SERVER.PORT}/api/getCodeSnippets`,)
                         .then(response => response.json())
-                        .then(json => {
+                        .then(async (json) => {
+                            setProgessBarState(0.4);
+                            await sleep(500);
                             if (json.result === 'OK' && json.codeSnippets) {
                                 resolveSub(json.codeSnippets);
                             } else {
@@ -124,36 +137,43 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCod
                 } else {
                     rejectSub(errorsContext.MISSING_SERVER_INFO);
                 }
-            }).then(codeSnippets => {
-                resolveMain(codeSnippets);
-            }).catch(async (error) => {
+            }).then(async codeSnippets => {
+                setProgessBarState(0.8);
+                await sleep(500);
+                result = { codeSnippets: codeSnippets, dataSource: 'API' };
+            }).catch(async error => {
+                setProgessBarState(0.8);
+                await sleep(500);
                 console.warn(error);
-                // Something went wrong, try to get the list of codeSnippets 
+                // Something went wrong, trying to get the list of codeSnippets 
                 // from the local storage
                 let codeSnippets = await Storage.getCodeSnippets();
                 if (codeSnippets) {
-                    resolveMain(codeSnippets);
+                    result = { codeSnippets: codeSnippets, dataSource: 'STORAGE' };
                 }
+            }).finally(() => {
+                setProgessBarState(0);
+                resolveMain(result);
             });
         })
     };
-
-
 
     // Loads the list of snippets on first component load
     useEffect(() => {
         loadCodeSnippets();
     }, []);
 
-    // Gets the list of component, updates it locally to be renderer
+    // Gets the list of code snippets, updates it locally to be renderer
     // and stores it in the local storage for further use in case the 
     // server is not responding
     const loadCodeSnippets = () => {
         getCodeSnippets()
             .then(
-                codeSnippets => {
-                    setCodeSnippets(codeSnippets);
-                    Storage.storeCodeSnippets(codeSnippets);
+                result => {
+                    setCodeSnippets(result.codeSnippets);
+                    if (result.dataSource === 'API') {
+                        Storage.storeCodeSnippets(result.codeSnippets);
+                    }
                     onDataIsLoaded();
                     setRefreshing(false)
                 },
@@ -202,6 +222,7 @@ const CodeSnippetContainer = ({ onDataIsLoaded, SERVER, navigation, showAddedCod
 
     return (
         <>
+            {progessBarState !== 0 && <Progress.Bar progress={progessBarState} width={200} color='white' />}
             <SearchBar searchFilter={searchFilter} addCodeSnippetCall={addCodeSnippetCall} />
             <CodeSnippetList codeSnippets={codeSnippets} reloadCodeSnippets={loadCodeSnippets} refreshing={refreshing} copyToClipboard={copyToClipboard} />
         </>
